@@ -1,29 +1,60 @@
-let express = require("express");
+/*!
+ * encodeurl
+ * Copyright(c) 2016 Douglas Christopher Wilson
+ * MIT Licensed
+ */
 
-let app = express();
+'use strict'
 
-let path = require("path"); //could be const also
+/**
+ * Module exports.
+ * @public
+ */
 
-const port = 3000;
+module.exports = encodeUrl
 
-//makes handling forms easier. 
-app.use(express.urlencoded({extended: true}));
+/**
+ * RegExp to match non-URL code points, *after* encoding (i.e. not including "%")
+ * and including invalid escape sequences.
+ * @private
+ */
 
-app.get("/", (req, res) => res.sendFile(path.join(__dirname + '/index.html')));
-app.get("/utah_data", (req, res) => 
-    {
-        console.log("Seeing Utah Data");
-        res.sendFile(path.join(__dirname + '/testimonials.html'));
-    }
-);
+var ENCODE_CHARS_REGEXP = /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g
 
-app.use("/assets", express.static(__dirname + "/assets"));
-app.use("/assets/img", express.static(__dirname + "/assets/img"));
-app.use("/services.html", express.static(__dirname + "/services.html"));
-app.use("/testimonials.html", express.static(__dirname + "/testimonials.html"));
-app.use("/about.html", express.static(__dirname + "/about.html"));
-app.use("/index.html", express.static(__dirname + "/index.html"));
-app.use("/team.html", express.static(__dirname + "/team.html"));
-app.use("/blog.html", express.static(__dirname + "/blog.html"));
+/**
+ * RegExp to match unmatched surrogate pair.
+ * @private
+ */
 
-app.listen(port, () => console.log("Start listening!"));
+var UNMATCHED_SURROGATE_PAIR_REGEXP = /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g
+
+/**
+ * String to replace unmatched surrogate pair with.
+ * @private
+ */
+
+var UNMATCHED_SURROGATE_PAIR_REPLACE = '$1\uFFFD$2'
+
+/**
+ * Encode a URL to a percent-encoded form, excluding already-encoded sequences.
+ *
+ * This function will take an already-encoded URL and encode all the non-URL
+ * code points. This function will not encode the "%" character unless it is
+ * not part of a valid sequence (`%20` will be left as-is, but `%foo` will
+ * be encoded as `%25foo`).
+ *
+ * This encode is meant to be "safe" and does not throw errors. It will try as
+ * hard as it can to properly encode the given URL, including replacing any raw,
+ * unpaired surrogate pairs with the Unicode replacement character prior to
+ * encoding.
+ *
+ * @param {string} url
+ * @return {string}
+ * @public
+ */
+
+function encodeUrl (url) {
+  return String(url)
+    .replace(UNMATCHED_SURROGATE_PAIR_REGEXP, UNMATCHED_SURROGATE_PAIR_REPLACE)
+    .replace(ENCODE_CHARS_REGEXP, encodeURI)
+}
