@@ -1,60 +1,79 @@
 /*!
- * encodeurl
- * Copyright(c) 2016 Douglas Christopher Wilson
+ * depd
+ * Copyright(c) 2014-2015 Douglas Christopher Wilson
  * MIT Licensed
  */
 
 'use strict'
 
 /**
+ * Module dependencies.
+ * @private
+ */
+
+var EventEmitter = require('events').EventEmitter
+
+/**
  * Module exports.
  * @public
  */
 
-module.exports = encodeUrl
+lazyProperty(module.exports, 'callSiteToString', function callSiteToString () {
+  var limit = Error.stackTraceLimit
+  var obj = {}
+  var prep = Error.prepareStackTrace
+
+  function prepareObjectStackTrace (obj, stack) {
+    return stack
+  }
+
+  Error.prepareStackTrace = prepareObjectStackTrace
+  Error.stackTraceLimit = 2
+
+  // capture the stack
+  Error.captureStackTrace(obj)
+
+  // slice the stack
+  var stack = obj.stack.slice()
+
+  Error.prepareStackTrace = prep
+  Error.stackTraceLimit = limit
+
+  return stack[0].toString ? toString : require('./callsite-tostring')
+})
+
+lazyProperty(module.exports, 'eventListenerCount', function eventListenerCount () {
+  return EventEmitter.listenerCount || require('./event-listener-count')
+})
 
 /**
- * RegExp to match non-URL code points, *after* encoding (i.e. not including "%")
- * and including invalid escape sequences.
- * @private
+ * Define a lazy property.
  */
 
-var ENCODE_CHARS_REGEXP = /(?:[^\x21\x25\x26-\x3B\x3D\x3F-\x5B\x5D\x5F\x61-\x7A\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g
+function lazyProperty (obj, prop, getter) {
+  function get () {
+    var val = getter()
+
+    Object.defineProperty(obj, prop, {
+      configurable: true,
+      enumerable: true,
+      value: val
+    })
+
+    return val
+  }
+
+  Object.defineProperty(obj, prop, {
+    configurable: true,
+    enumerable: true,
+    get: get
+  })
+}
 
 /**
- * RegExp to match unmatched surrogate pair.
- * @private
+ * Call toString() on the obj
  */
 
-var UNMATCHED_SURROGATE_PAIR_REGEXP = /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g
-
-/**
- * String to replace unmatched surrogate pair with.
- * @private
- */
-
-var UNMATCHED_SURROGATE_PAIR_REPLACE = '$1\uFFFD$2'
-
-/**
- * Encode a URL to a percent-encoded form, excluding already-encoded sequences.
- *
- * This function will take an already-encoded URL and encode all the non-URL
- * code points. This function will not encode the "%" character unless it is
- * not part of a valid sequence (`%20` will be left as-is, but `%foo` will
- * be encoded as `%25foo`).
- *
- * This encode is meant to be "safe" and does not throw errors. It will try as
- * hard as it can to properly encode the given URL, including replacing any raw,
- * unpaired surrogate pairs with the Unicode replacement character prior to
- * encoding.
- *
- * @param {string} url
- * @return {string}
- * @public
- */
-
-function encodeUrl (url) {
-  return String(url)
-    .replace(UNMATCHED_SURROGATE_PAIR_REGEXP, UNMATCHED_SURROGATE_PAIR_REPLACE)
-    .replace(ENCODE_CHARS_REGEXP, encodeURI)
+function toString (obj) {
+  return obj.toString()
 }

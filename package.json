@@ -1,61 +1,41 @@
 {
-  "name": "escalade",
-  "version": "3.1.1",
-  "repository": "lukeed/escalade",
-  "description": "A tiny (183B to 210B) and fast utility to ascend parent directories",
-  "module": "dist/index.mjs",
-  "main": "dist/index.js",
-  "types": "index.d.ts",
+  "name": "depd",
+  "description": "Deprecate all the things",
+  "version": "1.1.2",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
   "license": "MIT",
-  "author": {
-    "name": "Luke Edwards",
-    "email": "luke.edwards05@gmail.com",
-    "url": "https://lukeed.com"
-  },
-  "exports": {
-    ".": [
-      {
-        "import": "./dist/index.mjs",
-        "require": "./dist/index.js"
-      },
-      "./dist/index.js"
-    ],
-    "./sync": [
-      {
-        "import": "./sync/index.mjs",
-        "require": "./sync/index.js"
-      },
-      "./sync/index.js"
-    ]
+  "keywords": [
+    "deprecate",
+    "deprecated"
+  ],
+  "repository": "dougwilson/nodejs-depd",
+  "browser": "lib/browser/index.js",
+  "devDependencies": {
+    "benchmark": "2.1.4",
+    "beautify-benchmark": "0.2.4",
+    "eslint": "3.19.0",
+    "eslint-config-standard": "7.1.0",
+    "eslint-plugin-markdown": "1.0.0-beta.7",
+    "eslint-plugin-promise": "3.6.0",
+    "eslint-plugin-standard": "3.0.1",
+    "istanbul": "0.4.5",
+    "mocha": "~1.21.5"
   },
   "files": [
-    "*.d.ts",
-    "dist",
-    "sync"
+    "lib/",
+    "History.md",
+    "LICENSE",
+    "index.js",
+    "Readme.md"
   ],
-  "modes": {
-    "sync": "src/sync.js",
-    "default": "src/async.js"
-  },
   "engines": {
-    "node": ">=6"
+    "node": ">= 0.6"
   },
   "scripts": {
-    "build": "bundt",
-    "pretest": "npm run build",
-    "test": "uvu -r esm test -i fixtures"
-  },
-  "keywords": [
-    "find",
-    "parent",
-    "parents",
-    "directory",
-    "search",
-    "walk"
-  ],
-  "devDependencies": {
-    "bundt": "1.1.1",
-    "esm": "3.2.25",
-    "uvu": "0.3.3"
+    "bench": "node benchmark/index.js",
+    "lint": "eslint --plugin markdown --ext js,md .",
+    "test": "mocha --reporter spec --bail test/",
+    "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --no-exit test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/"
   }
 }
